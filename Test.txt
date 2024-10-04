@@ -1,0 +1,96 @@
+--abaixo a UI lib da nossa UI
+
+local Lib = loadstring(game:HttpGet("https://raw.githubusercontent.com/7yhx/kwargs_Ui_Library/main/source.lua"))()
+
+local UI = Lib:Create{
+    Theme = "Dark", -- or any other theme
+    Size = UDim2.new(0, 555, 0, 400) -- default
+ }
+ 
+ local Main = UI:Tab{
+    Name = "Main"
+ }
+ 
+ local Divider = Main:Divider{
+    Name = "Main shit"
+ }
+ 
+ local QuitDivider = Main:Divider{
+    Name = "Quit"
+ }
+
+-- Verifica se a API de desenho está disponível
+local function API_Check()
+    if Drawing == nil then
+        return "No"
+    else
+        return "Yes"
+    end
+end
+
+local Find_Required = API_Check()
+if Find_Required == "No" then
+    game:GetService("StarterGui"):SetCore("SendNotification", {
+        Title = "Erro",
+        Text = "A API de desenho não está disponível.",
+        Duration = math.huge,
+        Button1 = "OK"
+    })
+    return
+end
+
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local Camera = workspace.CurrentCamera
+local UserInputService = game:GetService("UserInputService")
+
+-- Configurações do ESP
+_G.ESPVisible = true
+_G.TextColor = Color3.fromRGB(255, 80, 10)
+_G.TextSize = 14
+_G.Center = true
+_G.Outline = true
+_G.OutlineColor = Color3.fromRGB(0, 0, 0)
+_G.TextTransparency = 0.7
+_G.TextFont = Drawing.Fonts.UI
+_G.DisableKey = Enum.KeyCode.P  -- Tecla alterada para "P"
+
+-- Função para criar o ESP
+local function CreateESP()
+    for _, v in pairs(Players:GetPlayers()) do
+        if v.Name ~= Players.LocalPlayer.Name then
+            local ESP = Drawing.new("Text")
+            RunService.RenderStepped:Connect(function()
+                if workspace:FindFirstChild(v.Name) and workspace[v.Name]:FindFirstChild("HumanoidRootPart") then
+                    local Vector, OnScreen = Camera:WorldToViewportPoint(workspace[v.Name].Head.Position)
+                    ESP.Size = _G.TextSize
+                    ESP.Center = _G.Center
+                    ESP.Outline = _G.Outline
+                    ESP.OutlineColor = _G.OutlineColor
+                    ESP.Color = _G.TextColor
+                    ESP.Transparency = _G.TextTransparency
+                    ESP.Font = _G.TextFont
+
+                    if OnScreen then
+                        local health = v.Character.Humanoid.Health
+                        ESP.Position = Vector2.new(Vector.X, Vector.Y - 25)
+                        ESP.Text = v.Name .. " [" .. math.floor(health) .. "]"
+                        ESP.Visible = _G.ESPVisible
+                    else
+                        ESP.Visible = false
+                    end
+                end
+            end)
+        end
+    end
+end
+
+-- Chama a função para criar o ESP
+CreateESP()
+
+-- Desabilita/Ativa o ESP com a tecla definida
+UserInputService.InputBegan:Connect(function(input)
+    if input.KeyCode == _G.DisableKey then
+        _G.ESPVisible = not _G.ESPVisible
+    end
+end)
